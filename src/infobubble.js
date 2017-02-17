@@ -39,11 +39,26 @@ function InfoBubble(opt_options) {
   this.activeTab_ = null;
   this.baseZIndex_ = 100;
   this.isOpen_ = false;
+  this.widthOffset = 10;
+  this.heightOffset = 18;
+  this.defaultIcon = opt_options.defaultIcon;
 
   var options = opt_options || {};
 
   if (options['backgroundColor'] == undefined) {
     options['backgroundColor'] = this.BACKGROUND_COLOR_;
+  }
+  if (options['backgroundImage'] == undefined) {
+    options['backgroundImage'] = this.BACKGROUND_IMAGE_;
+  }
+  if (options['widthOffset'] == undefined) {
+    options['widthOffset'] = this.WIDTH_OFFSET_;
+  }
+  if (options['heightOffset'] == undefined) {
+    options['heightOffset'] = this.HEIGHT_OFFSET_;
+  }
+  if (options['defaultIcon'] == undefined) {
+    options['defaultIcon'] = this.DEFAULT_ICON_;
   }
 
   if (options['borderColor'] == undefined) {
@@ -105,8 +120,21 @@ window['InfoBubble'] = InfoBubble;
  * @const
  * @private
  */
-InfoBubble.prototype.ARROW_SIZE_ = 15;
+InfoBubble.prototype.ARROW_SIZE_ = 0;
 
+/**
+ * Default arrow style
+ * @const
+ * @private
+ */
+ InfoBubble.prototype.WIDTH_OFFSET_ = 0;
+
+ /**
+  * Default arrow style
+  * @const
+  * @private
+  */
+InfoBubble.prototype.HEIGHT_OFFSET_ = -5; //18;
 
 /**
  * Default arrow style
@@ -129,7 +157,7 @@ InfoBubble.prototype.SHADOW_STYLE_ = 1;
  * @const
  * @private
  */
-InfoBubble.prototype.MIN_WIDTH_ = 50;
+InfoBubble.prototype.MIN_WIDTH_ = 350;
 
 
 /**
@@ -147,6 +175,8 @@ InfoBubble.prototype.ARROW_POSITION_ = 50;
  */
 InfoBubble.prototype.PADDING_ = 10;
 
+InfoBubble.prototype.DEFAULT_ICON_ = '';
+
 
 /**
  * Default border width
@@ -161,7 +191,7 @@ InfoBubble.prototype.BORDER_WIDTH_ = 1;
  * @const
  * @private
  */
-InfoBubble.prototype.BORDER_COLOR_ = '#ccc';
+InfoBubble.prototype.BORDER_COLOR_ = 'rgb(255,255,255)';
 
 
 /**
@@ -177,7 +207,7 @@ InfoBubble.prototype.BORDER_RADIUS_ = 10;
  * @const
  * @private
  */
-InfoBubble.prototype.BACKGROUND_COLOR_ = '#fff';
+//InfoBubble.prototype.BACKGROUND_COLOR_ = '#fff';
 
 /**
  * Default close image source
@@ -185,6 +215,8 @@ InfoBubble.prototype.BACKGROUND_COLOR_ = '#fff';
  * @private
  */
 InfoBubble.prototype.CLOSE_SRC_ = 'https://maps.gstatic.com/intl/en_us/mapfiles/iw_close.gif';
+InfoBubble.prototype.BACKGROUND_IMAGE_ = 'inherit';//'url(Bg.png)'
+
 
 /**
  * Extends a objects prototype by anothers.
@@ -227,6 +259,7 @@ InfoBubble.prototype.buildDom_ = function() {
 
   var that = this;
   google.maps.event.addDomListener(close, 'click', function() {
+    that.anchor.setIcon(that.defaultIcon)
     that.close();
     google.maps.event.trigger(that, 'closeclick');
   });
@@ -238,6 +271,7 @@ InfoBubble.prototype.buildDom_ = function() {
   contentContainer.style['cursor'] = 'default';
   contentContainer.style['clear'] = 'both';
   contentContainer.style['position'] = 'relative';
+  contentContainer.classList.add('main')
 
   var content = this.content_ = document.createElement('DIV');
   contentContainer.appendChild(content);
@@ -286,8 +320,8 @@ InfoBubble.prototype.buildDom_ = function() {
       this.animationName_ + ';-webkit-animation-duration:0.5s;' +
       '-webkit-animation-iteration-count:1;}' +
       '@-webkit-keyframes ' + this.animationName_ + ' {from {' +
-      '-webkit-transform: scale(0)}50% {-webkit-transform: scale(1.2)}90% ' +
-      '{-webkit-transform: scale(0.95)}to {-webkit-transform: scale(1)}}';
+      '-webkit-filter: opacity(0%)}20%' +
+      'to {-webkit-filter: opacity(100%)}}';
 
   stylesheet.textContent = css;
   document.getElementsByTagName('head')[0].appendChild(stylesheet);
@@ -303,6 +337,18 @@ InfoBubble.prototype.setBackgroundClassName = function(className) {
   this.set('backgroundClassName', className);
 };
 InfoBubble.prototype['setBackgroundClassName'] = InfoBubble.prototype.setBackgroundClassName;
+
+// Add offset
+
+InfoBubble.prototype.setOffsetHeight = function(offset) {
+  this.set('offsetHeight', offset);
+};
+InfoBubble.prototype['setOffsetHeight'] = InfoBubble.prototype.setOffsetHeight;
+
+InfoBubble.prototype.setOffsetWidth = function(offset) {
+  this.set('offsetWidth', offset);
+};
+InfoBubble.prototype['setOffsetWidth'] = InfoBubble.prototype.setOffsetWidth;
 
 
 /**
@@ -354,6 +400,11 @@ InfoBubble.prototype.setArrowStyle = function(style) {
   this.set('arrowStyle', style);
 };
 InfoBubble.prototype['setArrowStyle'] = InfoBubble.prototype.setArrowStyle;
+
+InfoBubble.prototype.setDefaultIcon = function(path) {
+  this.set('defaultIcon', path);
+};
+InfoBubble.prototype['defaultIcon'] = InfoBubble.prototype.setDefaultIcon;
 
 
 /**
@@ -556,6 +607,11 @@ InfoBubble.prototype.setBackgroundColor = function(color) {
     this.set('backgroundColor', color);
   }
 };
+InfoBubble.prototype.setDefaultIcon = function(icon) {
+  if (icon) {
+    this.set('defaultIcon', icon);
+  }
+};
 InfoBubble.prototype['setBackgroundColor'] = InfoBubble.prototype.setBackgroundColor;
 
 
@@ -571,6 +627,26 @@ InfoBubble.prototype.backgroundColor_changed = function() {
   this.updateTabStyles_();
 };
 InfoBubble.prototype['backgroundColor_changed'] = InfoBubble.prototype.backgroundColor_changed;
+InfoBubble.prototype.setBackgroundImage = function(url) {
+  if (url) {
+    this.set('backgroundImage', url);
+  }
+};
+InfoBubble.prototype['setBackgroundImage'] = InfoBubble.prototype.setBackgroundImage;
+
+
+/**
+ * backgroundImage changed MVC callback
+ */
+InfoBubble.prototype.backgroundImage_changed = function() {
+  var backgroundImage = this.get('backgroundImage');
+  this.contentContainer_.parentNode.style['backgroundImage'] = backgroundImage;
+  this.contentContainer_.parentNode.style['backgroundPosition'] = 'bottom';
+  this.contentContainer_.parentNode.style['backgroundSize'] = 'cover';
+  this.contentContainer_.parentNode.style['backgroundRepeat'] = 'no-repeat';
+  this.updateTabStyles_();
+};
+InfoBubble.prototype['backgroundImage_changed'] = InfoBubble.prototype.backgroundImage_changed;
 
 
 /**
@@ -885,8 +961,8 @@ InfoBubble.prototype.draw = function() {
   arrowPosition = arrowPosition / 100;
 
   var pos = projection.fromLatLngToDivPixel(latLng);
-  var width = this.contentContainer_.offsetWidth;
-  var height = this.bubble_.offsetHeight;
+  var width = this.contentContainer_.offsetWidth - this.widthOffset;
+  var height = this.bubble_.offsetHeight - this.heightOffset;
 
   if (!width) {
     return;
@@ -1258,6 +1334,7 @@ InfoBubble.prototype.updateTabStyles_ = function() {
  */
 InfoBubble.prototype.setTabStyle_ = function(tab) {
   var backgroundColor = this.get('backgroundColor');
+  var backgroundImage = this.get('backgroundImage');
   var borderColor = this.get('borderColor');
   var borderRadius = this.getBorderRadius_();
   var borderWidth = this.getBorderWidth_();
@@ -1277,6 +1354,7 @@ InfoBubble.prototype.setTabStyle_ = function(tab) {
     'position': 'relative',
     'cursor': 'pointer',
     'backgroundColor': backgroundColor,
+    'backgroundImage': backgroundImage,
     'border': this.px(borderWidth) + ' solid ' + borderColor,
     'padding': this.px(padding / 2) + ' ' + this.px(padding),
     'marginRight': marginRight,
