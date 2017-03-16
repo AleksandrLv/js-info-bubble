@@ -1183,13 +1183,8 @@ InfoBubble.prototype.panToView = function() {
   // Fine out how much space at the bottom is free
   var spaceBottom = mapHeight - centerPos.y;
 
-  var needsTop = spaceTop < 0;
-  var deltaY = 0;
-
-  if (needsTop) {
-    spaceTop *= -1;
-    deltaY = (spaceTop + spaceBottom) / 2;
-  }
+  spaceTop *= -1;
+  var deltaY = (spaceTop + spaceBottom) / 2;
 
   pos.y -= deltaY;
   latLng = projection.fromContainerPixelToLatLng(pos);
